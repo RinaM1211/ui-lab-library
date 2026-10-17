@@ -240,13 +240,15 @@ async function handleCreate(e) {
 
   const [book_title, book_author, book_isbn] = bookVal.split('|');
 
-  const { error } = await state.sb.from('bookings').insert({
-    user_id:     state.user.id,
-    user_name:   userName(),
-    book_title, book_author, book_isbn,
-    pickup_date: pickupDate,
-    comment:     comment || null,
-    status:      'pending',
+  const { error } = await state.sb.rpc('insert_booking_direct', {
+    p_user_id:     state.user.id,
+    p_user_name:   userName(),
+    p_book_title:  book_title,
+    p_book_author: book_author,
+    p_book_isbn:   book_isbn,
+    p_pickup_date: pickupDate,
+    p_comment:     comment || null,
+    p_status:      'pending',
   });
 
   if (error) { toast('Ошибка: ' + error.message); return; }
