@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — Library Booking</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .auth-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .auth-card h1 { margin: 0 0 4px; font-size: 24px; }
+    .auth-card .sub { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #f3f4f6; border-radius: 8px; padding: 4px; }
+    .tab {
+      flex: 1; padding: 8px; border-radius: 6px;
+      border: none; background: transparent; cursor: pointer;
+      font-size: 14px; color: #4b5563;
+    }
+    .tab.active { background: #fff; color: #1f2328; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+    .auth-error { color: #dc2626; font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .auth-info  { color: #166534; font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .role-picker { display: flex; gap: 8px; margin-top: 6px; }
+    .role-picker label {
+      flex: 1; padding: 8px 10px; border: 1px solid #d1d5db;
+      border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px;
+    }
+    .role-picker input { display: none; }
+    .role-picker input:checked + span { color: #2b6cb0; font-weight: 600; }
+    .role-picker label:has(input:checked) { border-color: #2b6cb0; background: #eff6ff; }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>Library Booking</h1>
+      <p class="sub">Войдите или зарегистрируйтесь, чтобы бронировать книги.</p>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Вход</button>
+        <button class="tab" data-tab="register">Регистрация</button>
+      </div>
+
+      <!-- Вход -->
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Пароль</label>
+          <input id="loginPassword" type="password" required autocomplete="current-password">
+        </div>
+        <div class="auth-error" id="loginError"></div>
+        <button class="button button-primary" type="submit" style="width:100%;">Войти</button>
+      </form>
+
+      <!-- Регистрация -->
+      <form id="registerForm" hidden novalidate>
+        <div class="field">
+          <label for="regName">Имя</label>
+          <input id="regName" type="text" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="regEmail">Email</label>
+          <input id="regEmail" type="email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="regPassword">Пароль</label>
+          <input id="regPassword" type="password" required minlength="6" autocomplete="new-password">
+          <div class="field-hint">Минимум 6 символов.</div>
+        </div>
+        <div class="field">
+          <label>Роль</label>
+          <div class="role-picker">
+            <label><input type="radio" name="regRole" value="reader" checked><span>Читатель</span></label>
+            <label><input type="radio" name="regRole" value="librarian"><span>Библиотекарь</span></label>
+            <label><input type="radio" name="regRole" value="manager"><span>Менеджер</span></label>
+          </div>
+        </div>
+        <div class="auth-error" id="registerError"></div>
+        <div class="auth-info"  id="registerInfo"></div>
+        <button class="button button-primary" type="submit" style="width:100%;">Зарегистрироваться</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    // ⚠️ ВСТАВЬТЕ СВОИ ЗНАЧЕНИЯ
+    const SUPABASE_URL  = 'https://eqrvlelxgetltkidertn.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxcnZsZWx4Z2V0bHRraWRlcnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzODkzMzcsImV4cCI6MjEwNTk2NTMzN30.dpPxwUssBwKf9XsUSV34XK-swWKQEWNuqvArOnFX4GQ';
+
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    window.supabase = sb;
+    window.dispatchEvent(new Event('supabase-ready'));
+
+    // Если уже вошли — сразу в приложение
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      window.location.href = 'index.html';
+    }
+
+    // Переключение табов
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const isLogin = tab.dataset.tab === 'login';
+        document.getElementById('loginForm').hidden = !isLogin;
+        document.getElementById('registerForm').hidden = isLogin;
+      });
+    });
+
+    // Вход
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('loginError');
+      err.textContent = '';
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { err.textContent = error.message; return; }
+
+      window.location.href = 'index.html';
+    });
+
+    // Регистрация
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('registerError');
+      const infoBox = document.getElementById('registerInfo');
+      errBox.textContent = '';
+      infoBox.textContent = '';
+
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const role = document.querySelector('input[name="regRole"]:checked').value;
+
+      const { error } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name, role },
+        },
+      });
+
+      if (error) { errBox.textContent = error.message; return; }
+
+      // Обновим профиль (если включён триггер на auth.users — не нужно)
+      await sb.rpc('create_profile_if_missing');
+
+      infoBox.textContent = 'Аккаунт создан. Проверьте почту или войдите.';
+      setTimeout(() => {
+        document.querySelector('.tab[data-tab="login"]').click();
+      }, 1200);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Booking</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="brand">Library Booking</div>
+
+    <div class="header-right">
+      <button id="usersButton" class="button button-secondary" hidden>Пользователи</button>
+
+      <div class="user-box">
+        <span id="userName" class="user-name">…</span>
+        <span id="userRole" class="user-role">…</span>
+      </div>
+
+      <button id="logoutButton" class="button button-secondary">Выйти</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section id="listPage" class="page">
+      <div class="page-title-row">
+        <div>
+          <h1 id="listTitle">Мои брони</h1>
+          <p id="listSubtitle">Созданные брони и их текущие состояния.</p>
+        </div>
+        <button id="openCreateButton" class="button button-primary">Создать бронь</button>
+      </div>
+
+      <div id="statusFilter" class="status-filter" hidden>
+        <button class="filter-btn active" data-status="all">Все</button>
+        <button class="filter-btn" data-status="pending">Ожидают</button>
+        <button class="filter-btn" data-status="approved">Подтверждены</button>
+        <button class="filter-btn" data-status="issued">Выданы</button>
+        <button class="filter-btn" data-status="returned">Возвращены</button>
+        <button class="filter-btn" data-status="cancelled">Отменены</button>
+      </div>
+
+      <div id="bookingList"></div>
+    </section>
+
+    <section id="createPage" class="page" hidden>
+      <button class="link-button" type="button" data-page="listPage">← К списку</button>
+      <h1>Новая бронь</h1>
+      <p>Заполните обязательные поля. После создания бронь появится в списке.</p>
+
+      <form id="bookingForm" novalidate>
+        <div class="field">
+          <label for="book">Книга <span class="required">*</span></label>
+          <select id="book" name="book" required>
+            <option value="">Выберите книгу</option>
+            <option value="Мастер и Маргарита|М. Булгаков|978-5-17-123456-7">Мастер и Маргарита — М. Булгаков</option>
+            <option value="Преступление и наказание|Ф. Достоевский|978-5-17-987654-3">Преступление и наказание — Ф. Достоевский</option>
+            <option value="Война и мир|Л. Толстой|978-5-17-111111-1">Война и мир — Л. Толстой</option>
+            <option value="Евгений Онегин|А. Пушкин|978-5-17-222222-2">Евгений Онегин — А. Пушкин</option>
+            <option value="Тихий Дон|М. Шолохов|978-5-17-333333-3">Тихий Дон — М. Шолохов</option>
+          </select>
+          <div class="field-error" id="bookError"></div>
+        </div>
+
+        <div class="field">
+          <label for="pickupDate">Дата выдачи <span class="required">*</span></label>
+          <input id="pickupDate" name="pickupDate" type="date" required>
+          <div class="field-error" id="pickupDateError"></div>
+        </div>
+
+        <div class="field">
+          <label for="comment">Комментарий</label>
+          <textarea id="comment" name="comment" rows="3" maxlength="200"></textarea>
+          <div class="field-hint">Необязательное поле. До 200 символов.</div>
+        </div>
+
+        <div class="actions">
+          <button id="submitButton" class="button button-primary" type="submit">Забронировать</button>
+          <button class="button button-secondary" type="button" data-page="listPage">Отмена</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="detailPage" class="page" hidden>
+      <button class="link-button" type="button" data-page="listPage">← К списку</button>
+      <div id="bookingDetails"></div>
+    </section>
+
+    <section id="usersPage" class="page" hidden>
+      <button class="link-button" type="button" data-page="listPage">← К списку</button>
+      <h1>Пользователи</h1>
+      <p>Все зарегистрированные пользователи системы.</p>
+      <div id="usersList"></div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Supabase JS -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    // ⚠️ ВСТАВЬТЕ СВОИ ЗНАЧЕНИЯ
+   const SUPABASE_URL  = 'https://eqrvlelxgetltkidertn.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxcnZsZWx4Z2V0bHRraWRlcnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzODkzMzcsImV4cCI6MjEwNTk2NTMzN30.dpPxwUssBwKf9XsUSV34XK-swWKQEWNuqvArOnFX4GQ';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+    window.supabase = supabase;
+    window.dispatchEvent(new Event('supabase-ready'));
+  </script>
+
+  <script src="app.js"></script>
+</body>
+</html>
